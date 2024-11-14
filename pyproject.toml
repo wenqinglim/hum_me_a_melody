@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "hum_me_a_melody"
+version = "0.1.0"
+description = ""
+authors = ["wenqinglim <lim_wenq@hotmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+accelerate = "^1.0.1"
+peft = "^0.13.2"
+ffmpeg-python = "^0.2.0"
+essentia-tensorflow = "^2.1b6.dev1177"
+kerykeion = "^4.18.5"
+torch = "2.1.0"
+torchvision = "^0.16"
+torchtext = "0.16.0"
+torchaudio = "2.1.0"
+diffusers = {extras = ["torch"], version = "^0.31.0"}
+gradio = "^5.4.0"
+setuptools = "^75.3.0"
+wheel = "^0.44.0"
+numpy = "1.26.4"
+moviepy = "^1.0.3"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.5"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

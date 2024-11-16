@@ -1,21 +1,19 @@
-import numpy as np
-import ffmpeg
-
 # Mood detection on audio
-#@title Load the MTG Listening Models
-
 # Thank you Dr Colton for the MTG model code snippets from lab notebooks.
 
+import numpy as np
+# import ffmpeg
 from essentia.standard import AudioLoader, MonoLoader, TensorflowPredictEffnetDiscogs, TensorflowPredict2D
 import essentia
 
+#  Load the MTG Listening Models
 embeddings_model = TensorflowPredictEffnetDiscogs(
-    graphFilename="discogs-effnet-bs64-1.pb",
+    graphFilename="../tf_graph_files/discogs-effnet-bs64-1.pb",
     output="PartitionedCall:1",
 )
 
 mood_classification_model = TensorflowPredict2D(
-    graphFilename="mtg_jamendo_moodtheme-discogs-effnet-1.pb",
+    graphFilename="../tf_graph_files/mtg_jamendo_moodtheme-discogs-effnet-1.pb",
     output='model/Sigmoid',
 )
 

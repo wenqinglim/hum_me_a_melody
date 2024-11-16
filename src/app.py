@@ -1,18 +1,30 @@
-# @title Setup MusicGen
+# Setup MusicGen
 from moods import get_moods
-from astrology import get_planets
+from astrology import get_planets, planets_instruments
 from music_generation import construct_musicgen_prompt, generate_music
 from video_generation import get_video_gen_pipeline
 
+from diffusers.utils import export_to_video
+from audiocraft.models import MusicGen
+
+import ffmpeg
 import gradio as gr
-# Import music generation model
 import torch
 import torchaudio
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
+# Pre-load MusicGen model
+# music_gen_model = MusicGen.get_pretrained('melody')
+music_gen_model = MusicGen.get_pretrained('facebook/musicgen-melody')
 
-# @title Define wrapper functions for Gradio
+music_gen_model.set_generation_params(duration=8)  # generate 8 seconds.
+
+# Pre-load VideoGen pipeline
+step = 4  # Options: [1,2,4,8]
+video_gen_pipeline = get_video_gen_pipeline(device, step)
+
+# Define wrapper functions for Gradio
 def melody_to_composition(audio_file):
   """
   Wrapper function for Gradio
@@ -21,8 +33,7 @@ def melody_to_composition(audio_file):
   """
   sr, audio = audio_file
   moods, themes, functions = get_moods(audio)
-  message = f"I'd describe your voice and melody as {', '.join(moods)}.\
-    If that's not what you intended to sound like, then maybe practice singing more. "
+  message = f"I'd describe your voice and melody as {', '.join(moods)}. If that's not what you intended to sound like, then maybe practice singing more. "
   if themes:
     message += f"It has some {', '.join(themes)} vibes. "
   if functions:
@@ -30,17 +41,15 @@ def melody_to_composition(audio_file):
 
   planets = get_planets()
   if planets:
-    message += f"\nThese are the planet(s) in my astrology sign today: {planets}.\
-    I have composed a piece inspired by them. "
+    message += f"\nThese are the planet(s) in my astrology sign today: {planets}. I have composed a piece inspired by them. "
 
   musicgen_prompt = construct_musicgen_prompt(moods, themes, functions, planets, planets_instruments)
 
-  wav = generate_music(musicgen_prompt, audio, sr)
+  wav = generate_music(music_gen_model, musicgen_prompt, audio, sr)
 
   message += f"\nBased on your melody, I'm have created {musicgen_prompt}. Take a listen - what does it remind you of? "
 
   torch.cuda.empty_cache()
-
 
   return "composition.wav", moods, message
 
@@ -54,8 +63,10 @@ def text_to_muvi(user_input_txt, moods):
   """
   video_prompt = f"{user_input_txt}, {', '.join(moods)} mood"
   # Generate video (+ 10.6GB of GPU RAM usage)
-  pipe = get_video_gen_pipeline(device)
-  output = pipe(
+  # step = 4  # Options: [1,2,4,8]
+  # pipe = get_video_gen_pipeline(device, step)
+
+  output = video_gen_pipeline(
                 prompt=video_prompt,
                 negative_prompt="bad quality, worse quality, watermark",
                 guidance_scale=1.0,
@@ -69,17 +80,13 @@ def text_to_muvi(user_input_txt, moods):
   audio = ffmpeg.input("composition.wav")
   video = ffmpeg.input("video_only.mp4")
 
-
   music_video = ffmpeg.concat(video, audio, v=1, a=1)
 
   music_video.output("muvi.mp4").run(overwrite_output=True)
 
-  message = f"Since the music sounds like '{user_input_txt}' to you,\
-  I've created a video that captures that imagery in a {', '.join(moods)} mood.\
-  Here's the masterpiece: A music video!"
+  message = f"Since the music sounds like '{user_input_txt}' to you, I've created a video that captures that imagery in a {', '.join(moods)} mood. Here's the masterpiece: A music video!"
 
   return "muvi.mp4", message
-
 
 
 if __name__ == "__main__":
@@ -96,6 +103,14 @@ if __name__ == "__main__":
         """)
         moods = gr.State([])
         audio_file = gr.Audio(type="numpy")
+        gr.Examples(
+            examples=[
+                "examples/male_duet_cpop.wav",
+                # "examples/bach_on_drugs_test.wav",
+                # "examples/bach_on_drugs_test.mp3",
+            ],
+            inputs=audio_file,
+        )
         b1 = gr.Button("Submit melody")
         message = gr.Textbox()
 
@@ -106,7 +121,7 @@ if __name__ == "__main__":
 
         # 3. Show final music video
         message_final = gr.Textbox()
-        muvi_path = gr.PlayableVideo()
+        muvi_path = gr.PlayableVideo(height=400)
 
         b1.click(melody_to_composition, inputs=audio_file, outputs=[wav_path, moods, message])
         b2.click(text_to_muvi, inputs=[user_text, moods], outputs=[muvi_path, message_final])

@@ -21,7 +21,6 @@ gradio = "^5.4.0"
 setuptools = "^75.3.0"
 wheel = "^0.44.0"
 numpy = "1.26.4"
-moviepy = "^1.0.3"
 
 
 [tool.poetry.group.dev.dependencies]

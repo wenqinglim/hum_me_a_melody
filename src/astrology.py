@@ -1,4 +1,4 @@
- # @title functions for Astrology information and instrumentation
+ # Astrology information and instrumentation
 from kerykeion import AstrologicalSubject
 from datetime import datetime
 
@@ -52,7 +52,6 @@ def get_planets(filtered_sign='Ari', valid_planets=holst_planets):
 
   # Create object for astrological subject
   astro_subj = AstrologicalSubject("GenAI", today.year, today.month, today.day, today.hour, today.minute, "London", "GB")
-
 
   today_planets = []
   for planet_name in astro_subj.planets_names_list:

@@ -23,12 +23,12 @@ def construct_musicgen_prompt(moods, themes, functions, planets, planets_instrum
   return prompt
 
 
-def generate_music(musicgen_prompt, audio, sr):
+def generate_music(model, musicgen_prompt, audio, sr):
   """
   Generates music using pre-trained MusicGen model
   """
-  model = MusicGen.get_pretrained('melody')
-  model.set_generation_params(duration=8)  # generate 8 seconds.
+  # model = MusicGen.get_pretrained('melody')
+  # model.set_generation_params(duration=8)  # generate 8 seconds.
 
   # generates using the melody from the given audio and the provided descriptions.
   wav_gpu = model.generate_with_chroma([musicgen_prompt], torch.tensor(audio).float().reshape(1, 1, -1), sr)[0]
